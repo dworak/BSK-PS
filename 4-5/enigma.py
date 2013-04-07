@@ -5,12 +5,13 @@ Created on Apr 7, 2013
 '''
 from random import shuffle,randint,choice, seed  
 from copy import copy  
+import string
 alphabet=range(0,26)  
       
 class enigma:
     def __init__(self, iloscRotorow,znakiSpecjalne,password):  
         self.znakiSpecjalne=znakiSpecjalne  
-        self.iloscRotorow=iloscRotorow  
+        self.iloscRotorow=iloscRotorow		
         self.rotory=[]  
         self.oCogs=[] # kopia polozenia wirnikow, do resetu  
         self.password = password
@@ -18,9 +19,9 @@ class enigma:
         for i in range(0,self.iloscRotorow): #tworzenie poszczegolnych wirnikow  
             self.rotory.append(rotor())
             if(i<self.passwordLen):
-                self.rotory[i].create(self.password[i])
+                self.rotory[i].create(self.password[i],i)
             else:
-                self.rotory[i].create(self.password[i%self.passwordLen])
+                self.rotory[i].create(self.password[i%self.passwordLen],i)
             self.oCogs.append(self.rotory[i].transformation)  
   
         #tworzenie bebna odwracajacego
@@ -37,9 +38,11 @@ class enigma:
     def podgladUstawien(self):  
         print 'Ilosc wirnikow: ', self.iloscRotorow ,"\n\nUstawienia poczatkowe wirnikow:"  
         for i in range(0,self.iloscRotorow):  
-            print ([self.rotory[i].transformation])  
-        print 'Ustawienia bebna odwracajacego:\n',self.reflector,'\n'  
-  
+            print ",".join([chr(i+65) for i in self.rotory[i].transformation])  
+        print '\nUstawienia bebna odwracajacego:\n'
+        for i  in self.reflector:
+            print '(',unichr(i+65),'\t',unichr(self.reflector[i]+65),')'
+        print '\n'
     def reset(self):  
         for i in range(0,self.iloscRotorow):  
             self.rotory[i].setcog(self.oCogs[i])  
@@ -64,14 +67,14 @@ class enigma:
                 for i in range(0,self.iloscRotorow): #przejscie z powrotem przez poszczegolne rotory  
                     num=self.rotory[self.iloscRotorow-i-1].passthroughrev(num)  
                 ciphertext+=""+chr(97+num) # dodaj zaszyfrowana litere do tekstu wynikowego  
-  
                 for i in range(0,self.iloscRotorow): #obracanie rotorow  
                     if ( ln % ((i*6)+1) == 0 ):  
-                        self.rotory[i].rotate()  
+                        self.rotory[i].rotate()
         return ciphertext  
 class rotor:  
-    def create(self, password):  
+    def create(self, password, nrRotoru):  
         self.transformation=copy(alphabet)
+        self.nrRotoru=nrRotoru
         #self.list = list(password)
         #print self.list
         #self.ordlist = [ord(i) for i in self.list]
@@ -85,28 +88,30 @@ class rotor:
     def passthroughrev(self,i):  
         return self.transformation.index(i)  
     def rotate(self):  
-        self.transformation=przestaw(self.transformation, 1)  
+        self.transformation=przestaw(self.transformation, 1, self.nrRotoru)  
     def setcog(self,a):  
         self.transformation=a  
-		
-def przestaw(l, n): 
-    return l[n:] + l[:n]  		
+        
+def przestaw(l, n, nr):
+    a = l[n:] + l[:n]
+    #print 28*nr*" "+"".join([chr(i+65) for i in a])+"_"+str(nr)
+    return a
 
 #file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\test.txt","r+b")
 #plaintext=file.read()
 plaintext = "dworakowski lukasz mam na imie a moja mama to malgorzata"
  
-x=enigma(3,True,"hasloDoGenerowania")   
+x=enigma(4,True,"23")   
 x.podgladUstawien();
-print ("Teskt do zaszyfrowanie:\n"+plaintext+"\n")  
+print ("Tekst do zaszyfrowanie:\n"+plaintext+"\n")  
 ciphertext=x.encode(plaintext)  
 print ("Tekst zaszyfrowany\n"+ciphertext+"\n")
 #x.reset()
   
  
-y=enigma(3,True,"hasloDoGenerowania")   
+y=enigma(4,True,"23")   
 plaintext=y.encode(ciphertext)
-print ("Plaintext:\n"+plaintext+"\n")
+print ("Tekst odszyfrowany:\n"+plaintext+"\n")
 
 '''
 rotorsConfigInt = []
