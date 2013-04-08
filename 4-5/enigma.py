@@ -3,10 +3,38 @@ Created on Apr 7, 2013
 
 @author: Dworak
 '''
+import ctypes
 from random import shuffle,randint,choice, seed  
 from copy import copy  
 import string
-alphabet=range(0,26)  
+alphabet=range(0,26) 
+
+STD_OUTPUT_HANDLE = -11
+BLUE    = 0x0001
+GREEN   = 0x0002
+RED     = 0x0004
+PURPLE  = 0x0005
+YELLOW  = 0x0006
+WHITE   = 0x0007
+GRAY    = 0x0008
+GREY    = 0x0008
+AQUA    = 0x0009
+CYAN    = 0x0003
+
+kolory = [CYAN,GREEN,RED,PURPLE,YELLOW,WHITE,GRAY,GREY,AQUA]
+
+def get_csbi_attributes(handle):
+    import struct
+    csbi = ctypes.create_string_buffer(22)
+    res = ctypes.windll.kernel32.GetConsoleScreenBufferInfo(handle, csbi)
+    assert res
+
+    (bufx, bufy, curx, cury, wattr,
+    left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+    return wattr
+
+handle = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+reset = get_csbi_attributes(handle)
       
 class enigma:
     def __init__(self, iloscRotorow,znakiSpecjalne,password):  
@@ -35,10 +63,11 @@ class enigma:
             self.reflector[a]=b  
             self.reflector[b]=a  
   
-    def podgladUstawien(self):  
-        print 'Ilosc wirnikow: ', self.iloscRotorow ,"\n\nUstawienia poczatkowe wirnikow:"  
-        for i in range(0,self.iloscRotorow):  
-            print ",".join([chr(i+65) for i in self.rotory[i].transformation])  
+    def podgladUstawien(self):		
+        print 'Ilosc wirnikow: ', self.iloscRotorow ,"\n\nUstawienia poczatkowe wirnikow:"		
+        for i in range(0,self.iloscRotorow):
+            kolor = choice(kolory)			
+            print ",".join([chr(i+65) for i in self.rotory[i].transformation])		
         print '\nUstawienia bebna odwracajacego:\n'
         for i  in self.reflector:
             print '(',unichr(i+65),'\t',unichr(self.reflector[i]+65),')'
@@ -94,25 +123,34 @@ class rotor:
         
 def przestaw(l, n, nr):
     a = l[n:] + l[:n]
-    #print 28*nr*" "+"".join([chr(i+65) for i in a])+"_"+str(nr)
+    kolor = kolory[nr%len(kolory)]
+    ctypes.windll.kernel32.SetConsoleTextAttribute(handle, kolor)
+    print '('+str(nr)+')'+nr*" "+"".join([chr(i+65) for i in a])
+    ctypes.windll.kernel32.SetConsoleTextAttribute(handle, reset)
     return a
 
 #file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\test.txt","r+b")
 #plaintext=file.read()
-plaintext = "dworakowski lukasz mam na imie a moja mama to malgorzata"
- 
-x=enigma(4,True,"23")   
+plaintext = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wejscie.txt","r").read()#raw_input("Podaj tekst do zakodaowania: ")
+numberOfRotors = raw_input("Podaj ilosc rotorow: ")
+passwordToGetRotorsPosition = raw_input("Podaj haslo do odczytu poczatkowych pozycji rotorow: ") 
+x=enigma(int(numberOfRotors),True,passwordToGetRotorsPosition)   
 x.podgladUstawien();
-print ("Tekst do zaszyfrowanie:\n"+plaintext+"\n")  
+print '\nTekst do zaszyfrowania:\n'+plaintext+'\n'
+print '\nPoszczegolne obroty wirnikow: '  
 ciphertext=x.encode(plaintext)  
-print ("Tekst zaszyfrowany\n"+ciphertext+"\n")
+print '\nTekst zaszyfrowany\n'+ciphertext+'\n'
 #x.reset()
-  
- 
-y=enigma(4,True,"23")   
+'''
+ciphertext = raw_input("Podaj tekst do odszyfrowania: ")
+numberOfRotors = raw_input("Podaj ilosc rotorow: ")
+passwordToGetRotorsPosition = raw_input("Podaj haslo do odczytu poczatkowych pozycji rotorow: ")
+y=enigma(int(numberOfRotors),True,passwordToGetRotorsPosition)   
 plaintext=y.encode(ciphertext)
-print ("Tekst odszyfrowany:\n"+plaintext+"\n")
-
+file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wejscie_zakodowane.txt","w")
+file.write(plaintext)
+print ("\nTekst odszyfrowany:\n"+plaintext+"\n")
+'''
 '''
 rotorsConfigInt = []
 for row in x.oCogs:
