@@ -7,6 +7,7 @@ import ctypes
 from random import shuffle,randint,choice, seed  
 from copy import copy  
 import string
+import os
 alphabet=range(0,26) 
 
 STD_OUTPUT_HANDLE = -11
@@ -131,7 +132,18 @@ def przestaw(l, n, nr):
 
 #file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\test.txt","r+b")
 #plaintext=file.read()
-plaintext = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wejscie.txt","r").read()#raw_input("Podaj tekst do zakodaowania: ")
+
+file_name = raw_input("Czy chcesz podac inna sciezke niz standardowa? (jesli tak podaj, w przeciwnym wypadku ENTER)\nSciezka do pliku: ")
+if(len(file_name)==0): 
+	plaintext= open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wejscie.txt","r+b").read()
+else:
+	if(os.path.exists(os.path.abspath(str(file_name)))):
+		plaintext = open(str(file_name),"r").read()
+	else:
+		print "Podany plik nie istnieje"
+		exit()
+	
+#raw_input("Podaj tekst do zakodaowania: ")
 numberOfRotors = raw_input("Podaj ilosc rotorow: ")
 passwordToGetRotorsPosition = raw_input("Podaj haslo do odczytu poczatkowych pozycji rotorow: ") 
 x=enigma(int(numberOfRotors),True,passwordToGetRotorsPosition)   
@@ -140,6 +152,8 @@ print '\nTekst do zaszyfrowania:\n'+plaintext+'\n'
 print '\nPoszczegolne obroty wirnikow: '  
 ciphertext=x.encode(plaintext)  
 print '\nTekst zaszyfrowany\n'+ciphertext+'\n'
+file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wyjscie.txt","w")
+file.write(ciphertext)
 #x.reset()
 '''
 ciphertext = raw_input("Podaj tekst do odszyfrowania: ")
