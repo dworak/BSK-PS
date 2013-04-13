@@ -4,11 +4,10 @@ Created on Apr 7, 2013
 @author: Dworak
 '''
 import ctypes
-from random import shuffle,randint,choice, seed  
-from copy import copy  
-import string
 import os
-alphabet=range(0,26) 
+from copy import copy  
+from random import randint, seed,shuffle, choice
+import string
 
 STD_OUTPUT_HANDLE = -11
 BLUE    = 0x0001
@@ -23,7 +22,7 @@ AQUA    = 0x0009
 CYAN    = 0x0003
 
 kolory = [CYAN,GREEN,RED,PURPLE,YELLOW,WHITE,GRAY,GREY,AQUA]
-
+alfabet=range(0,26) 
 def get_csbi_attributes(handle):
     import struct
     csbi = ctypes.create_string_buffer(22)
@@ -41,26 +40,25 @@ class enigma:
     def __init__(self, iloscRotorow,znakiSpecjalne,password):  
         self.znakiSpecjalne=znakiSpecjalne  
         self.iloscRotorow=iloscRotorow		
-        self.rotory=[]  
-        self.oCogs=[] # kopia polozenia wirnikow, do resetu  
+        self.rotory=[]
         self.password = password
         self.passwordLen = len(password)
-        for i in range(0,self.iloscRotorow): #tworzenie poszczegolnych wirnikow  
+		#tworzenie poszczegolnych wirnikow  
+        for i in range(0,self.iloscRotorow): 
             self.rotory.append(rotor())
             if(i<self.passwordLen):
                 self.rotory[i].create(self.password[i],i)
             else:
-                self.rotory[i].create(self.password[i%self.passwordLen],i)
-            self.oCogs.append(self.rotory[i].transformation)  
+                self.rotory[i].create(self.password[i%self.passwordLen],i)  
   
-        #tworzenie bebna odwracajacego
-        _alphabet=copy(alphabet)  
-        self.reflector=copy(alphabet)  
-        while len(_alphabet)>0:  
-            a=choice(_alphabet)  
-            _alphabet.remove(a)  
-            b=choice(_alphabet)  
-            _alphabet.remove(b)  
+        #tworzenie reflektora
+        _alfabet=copy(alfabet)  
+        self.reflector=copy(alfabet)  
+        while len(_alfabet)>0:  
+            a=choice(_alfabet)  
+            _alfabet.remove(a)  
+            b=choice(_alfabet)  
+            _alfabet.remove(b)  
             self.reflector[a]=b  
             self.reflector[b]=a  
   
@@ -72,11 +70,7 @@ class enigma:
         print '\nUstawienia bebna odwracajacego:\n'
         for i  in self.reflector:
             print '(',unichr(i+65),'\t',unichr(self.reflector[i]+65),')'
-        print '\n'
-    def reset(self):  
-        for i in range(0,self.iloscRotorow):  
-            self.rotory[i].setcog(self.oCogs[i])  
-  
+        print '\n'  
     def encode(self,text):  
         ln=0  
         ciphertext=""  
@@ -88,22 +82,22 @@ class enigma:
                 else:  
                     pass  
             else:  
-                ln+=1  
-                for i in range(0,self.iloscRotorow): #przejscie przez poszczegolne rotory 
+                ln+=1
+				#przejscie przez poszczegolne rotory
+                for i in range(0,self.iloscRotorow):  
                     num=self.rotory[i].passthrough(num)  
-  
                 num=self.reflector[num] #przejscie przez beben  
-  
                 for i in range(0,self.iloscRotorow): #przejscie z powrotem przez poszczegolne rotory  
                     num=self.rotory[self.iloscRotorow-i-1].passthroughrev(num)  
                 ciphertext+=""+chr(97+num) # dodaj zaszyfrowana litere do tekstu wynikowego  
-                for i in range(0,self.iloscRotorow): #obracanie rotorow  
+				#obsluga obrotu rotorow, jesli zajdzie potrzeba
+                for i in range(0,self.iloscRotorow):  
                     if ( ln % ((i*6)+1) == 0 ):  
                         self.rotory[i].rotate()
         return ciphertext  
 class rotor:  
     def create(self, password, nrRotoru):  
-        self.transformation=copy(alphabet)
+        self.transformation=copy(alfabet)
         self.nrRotoru=nrRotoru
         #self.list = list(password)
         #print self.list
@@ -111,7 +105,7 @@ class rotor:
         #''.join([str(n) for n in self.ordlist])
         #print ord(password)
         seed(ord(password)) 
-        shuffle(self.transformation) #odpowiednie pomieszanie wartosci do rotora
+        shuffle(self.transformation) #odpowiednie losowe pomieszanie wartosci do rotora
         return  
     def passthrough(self,i):  
         return self.transformation[i]  
@@ -133,12 +127,12 @@ def przestaw(l, n, nr):
 #file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\test.txt","r+b")
 #plaintext=file.read()
 
-file_name = raw_input("Czy chcesz podac inna sciezke niz standardowa? (jesli tak podaj, w przeciwnym wypadku ENTER)\nSciezka do pliku: ")
-if(len(file_name)==0): 
+fileName = raw_input("Czy chcesz podac inna sciezke niz standardowa? (jesli tak podaj, w przeciwnym wypadku ENTER)\nSciezka do pliku: ")
+if(len(fileName)==0): 
 	plaintext= open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wejscie.txt","r+b").read()
 else:
-	if(os.path.exists(os.path.abspath(str(file_name)))):
-		plaintext = open(str(file_name),"r").read()
+	if(os.path.exists(os.path.abspath(str(fileName)))):
+		plaintext = open(str(fileName),"r").read()
 	else:
 		print "Podany plik nie istnieje"
 		exit()
@@ -148,10 +142,10 @@ numberOfRotors = raw_input("Podaj ilosc rotorow: ")
 passwordToGetRotorsPosition = raw_input("Podaj haslo do odczytu poczatkowych pozycji rotorow: ") 
 x=enigma(int(numberOfRotors),True,passwordToGetRotorsPosition)   
 x.podgladUstawien();
-print '\nTekst do zaszyfrowania:\n'+plaintext+'\n'
+print '\nTekst do zaszyfrowania, odszyfrowania:\n'+plaintext+'\n'
 print '\nPoszczegolne obroty wirnikow: '  
 ciphertext=x.encode(plaintext)  
-print '\nTekst zaszyfrowany\n'+ciphertext+'\n'
+print '\nTekst zaszyfrowany, odszyfrowany\n'+ciphertext+'\n'
 file = open("C:\\Users\\Dworak\\Dropbox\\Studia\\SEM6\\BSK\\ps\\BSK-PS\\4-5\\wyjscie.txt","w")
 file.write(ciphertext)
 #x.reset()
